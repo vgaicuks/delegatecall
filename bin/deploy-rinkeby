@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+### deploy -- command-line interface to deploy Dpass contract
+### Usage: deploy
+
+### Before using deploy, you should copy the keystore file from your keystore to current directory. See:
+### geth - https://github.com/ethereum/go-ethereum/wiki/Backup-&-restore
+### parity - https://ethereum.stackexchange.com/questions/6471/where-are-my-keys-and-chain-data-located-if-i-am-using-parity
+
+set -ex
+
+## Settings for test networks like Rinkeby, Kovan, Ropsten
+
+## Internal settings (do not touch these unless you know what you are doing!!)
+export ETH_RPC_PORT=${ETH_RPC_PORT:-"8545"}
+export ETH_RPC_URL=https://rinkeby.infura.io/v3/47706a887c1245319e35b5e507c7f097
+export ETH_KEYSTORE="$(pwd)"
+
+export SOLC_FLAGS=${SOLC_FLAGS:-"--optimize"}
+export ETH_GAS=${ETH_GAS:-"4000000"}
+# 1000000000 wei = 1 gwei
+export ETH_GAS_PRICE=${ETH_GAS_PRICE:-"10000000000"}
+export NETWORK=$(seth chain)
+
+# TODO: set your account
+# export ETH_FROM=$(seth rpc eth_coinbase)
+export ETH_FROM=0x9556E25F9b4D343ee38348b6Db8691d10fD08A61
+
+test -z $NETWORK && exit 1
+
+dapp build
+
+hevm flatten --source-file src/Delegatecall.sol --json-file out/Delegatecall.sol.json > out/Delegatecall-flatt.sol
+
+D=$(dapp create Delegatecall)
+export D=$D
+
+echo -e "D DEPLOYED AT: $D"
+
+E=$(dapp create E)
+export E=$E
+
+echo -e "E DEPLOYED AT: $E"
